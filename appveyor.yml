@@ -1,0 +1,28 @@
+version: 1.0.{build}
+clone_depth: 3
+services: mssql2014
+build_script:
+- netsh advfirewall firewall add rule name="jdbc driver for sql server udp" dir=in action=allow protocol=UDP localport=1434
+- sc config sqlbrowser start= auto
+- net start sqlbrowser
+- ps: Set-ExecutionPolicy RemoteSigned
+- ps: .\Setting-SqlServer.ps1
+- net stop "SQL Server (SQL2014)"
+- net start "SQL Server (SQL2014)"
+- netsh advfirewall firewall add rule name="jdbc driver for sql server tcp" dir=in action=allow protocol=TCP localport=1433
+- sqlcmd -S ".\SQL2014" -U sa -P Password12! -Q "create database scalikejdbc;"
+- del project\sbt-idea.sbt
+- del project\sbt-pgp.sbt
+- del project\sbt-updates.sbt
+- del scalikejdbc-core\src\test\resources\jdbc.properties
+- move scalikejdbc-core\src\test\resources\jdbc_sqlserver.properties scalikejdbc-core\src\test\resources\jdbc.properties
+- ps: wget http://download.microsoft.com/download/0/2/A/02AAE597-3865-456C-AE7F-613F99F850A8/sqljdbc_4.1.5605.100_enu.tar.gz -OutFile "sqljdbc.tar.gz"
+- 7z x -y -oC:\projects\scalikejdbc\ sqljdbc.tar.gz
+- 7z x -y -oC:\projects\scalikejdbc\ sqljdbc.tar
+- ps: mkdir .\scalikejdbc-core\lib
+- ps: cp .\sqljdbc_4.1\enu\sqljdbc41.jar .\scalikejdbc-core\lib\
+- sbt core/test
+#- sbt test:compile "project root211" testSequential
+cache:
+- C:\Users\appveyor\.ivy2\cache
+- C:\Users\appveyor\.sbt\boot\scala-2.10.4
