@@ -125,49 +125,50 @@ class SQLInterpolationSpec extends FlatSpec with Matchers with LogSupport with L
         // abs
         {
           val v = sqls"${123}"
-          val doubleResult = sql"select ${abs(v)} from sqlsyntax_spec limit 1".map(_.double(1)).single.apply().get
+          val doubleResult = sql"select top 1 ${abs(v)} from sqlsyntax_spec".map(_.double(1)).single.apply().get
           doubleResult should equal(123.0d)
-          val floatResult = sql"select ${abs(v)} from sqlsyntax_spec limit 1".map(_.float(1)).single.apply().get
+          val floatResult = sql"select top 1 ${abs(v)} from sqlsyntax_spec".map(_.float(1)).single.apply().get
           floatResult should equal(123.0f)
-          val intResult = sql"select ${abs(v)} from sqlsyntax_spec limit 1".map(_.int(1)).single.apply().get
+          val intResult = sql"select top 1 ${abs(v)} from sqlsyntax_spec".map(_.int(1)).single.apply().get
           intResult should equal(123)
-          val longResult = sql"select ${abs(v)} from sqlsyntax_spec limit 1".map(_.long(1)).single.apply().get
+          val longResult = sql"select top 1 ${abs(v)} from sqlsyntax_spec".map(_.long(1)).single.apply().get
           longResult should equal(123L)
         }
         // floor
         {
           val v = sqls"${123.4}"
-          val doubleResult = sql"select ${floor(v)} from sqlsyntax_spec limit 1".map(_.double(1)).single.apply().get
+          val doubleResult = sql"select top 1 ${floor(v)} from sqlsyntax_spec".map(_.double(1)).single.apply().get
           doubleResult should equal(123.0d)
-          val floatResult = sql"select ${floor(v)} from sqlsyntax_spec limit 1".map(_.float(1)).single.apply().get
+          val floatResult = sql"select top 1 ${floor(v)} from sqlsyntax_spec".map(_.float(1)).single.apply().get
           floatResult should equal(123.0d)
-          val intResult = sql"select ${floor(v)} from sqlsyntax_spec limit 1".map(_.int(1)).single.apply().get
+          val intResult = sql"select top 1 ${floor(v)} from sqlsyntax_spec".map(_.int(1)).single.apply().get
           intResult should equal(123)
-          val longResult = sql"select ${floor(v)} from sqlsyntax_spec limit 1".map(_.long(1)).single.apply().get
+          val longResult = sql"select top 1 ${floor(v)} from sqlsyntax_spec".map(_.long(1)).single.apply().get
           longResult should equal(123L)
         }
         // ceiling
         {
           val v = sqls"${123.4}"
-          val doubleResult = sql"select ${ceiling(v)} from sqlsyntax_spec limit 1".map(_.double(1)).single.apply().get
+          val doubleResult = sql"select top 1 ${ceiling(v)} from sqlsyntax_spec".map(_.double(1)).single.apply().get
           doubleResult should equal(124.0d)
-          val floatResult = sql"select ${ceiling(v)} from sqlsyntax_spec limit 1".map(_.float(1)).single.apply().get
+          val floatResult = sql"select top 1 ${ceiling(v)} from sqlsyntax_spec".map(_.float(1)).single.apply().get
           floatResult should equal(124.0d)
-          val intResult = sql"select ${ceiling(v)} from sqlsyntax_spec limit 1".map(_.int(1)).single.apply().get
+          val intResult = sql"select top 1 ${ceiling(v)} from sqlsyntax_spec".map(_.int(1)).single.apply().get
           intResult should equal(124)
-          val longResult = sql"select ${ceiling(v)} from sqlsyntax_spec limit 1".map(_.long(1)).single.apply().get
+          val longResult = sql"select top 1 ${ceiling(v)} from sqlsyntax_spec".map(_.long(1)).single.apply().get
           longResult should equal(124L)
         }
         // current_date
         {
-          val t = sql"select ${currentDate} from sqlsyntax_spec limit 1".map(_.date(1)).single.apply().get
+          def currentTimestamp = sqls"current_timestamp"
+          val t = sql"select top 1 ${currentTimestamp} from sqlsyntax_spec".map(_.date(1)).single.apply().get
           log.warn("current_date: " + t + "," + t.getTime)
           // Timezone issue
           // t.toLocalDate should equal(LocalDate.now)
         }
         // current_timestamp
         {
-          val t = sql"select ${currentTimestamp} from sqlsyntax_spec limit 1".map(_.timestamp(1)).single.apply().get
+          val t = sql"select top 1 ${currentTimestamp} from sqlsyntax_spec".map(_.timestamp(1)).single.apply().get
           log.warn("current_timestamp: " + t + "," + t.getTime)
           t.toJodaDateTime.getMillis should be < (DateTime.now.plusDays(1).getMillis)
         }

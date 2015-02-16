@@ -32,7 +32,7 @@ class ResultSetTraversableSpec extends FlatSpec with Matchers with Settings {
             conn.prepareStatement("select * from " + tableName + " order by id limit 1").executeQuery()
           } catch {
             case e: Exception =>
-              conn.prepareStatement("select * from " + tableName + " order by id fetch first 1 rows only").executeQuery()
+              conn.prepareStatement("select * from " + tableName + " order by id offset 0 rows fetch first 1 rows only").executeQuery()
           }
         }
         new ResultSetTraversable(rs).foreach(_.int("id") should not equal (null))
@@ -50,7 +50,7 @@ class ResultSetTraversableSpec extends FlatSpec with Matchers with Settings {
             conn.prepareStatement("select * from " + tableName + " order by id limit 2").executeQuery()
           } catch {
             case e: Exception =>
-              conn.prepareStatement("select * from " + tableName + " order by id fetch first 2 rows only").executeQuery()
+              conn.prepareStatement("select * from " + tableName + " order by id offset 0 rows fetch first 2 rows only").executeQuery()
           }
         }
         new ResultSetTraversable(rs).foreach(_.int("id") should not equal (null))
@@ -79,7 +79,7 @@ class ResultSetTraversableSpec extends FlatSpec with Matchers with Settings {
             conn.prepareStatement("select * from " + tableName + " order by id limit 1").executeQuery()
           } catch {
             case e: Exception =>
-              conn.prepareStatement("select * from " + tableName + " order by id fetch first 1 rows only").executeQuery()
+              conn.prepareStatement("select * from " + tableName + " order by id offset 0 rows fetch first 1 rows only").executeQuery()
           }
         }
         new ResultSetTraversable(rs).foldLeft[List[Int]](Nil) { case (r, rs) => rs.int("id") :: r } should not be null
@@ -97,7 +97,7 @@ class ResultSetTraversableSpec extends FlatSpec with Matchers with Settings {
             conn.prepareStatement("select * from " + tableName + " order by id limit 2").executeQuery()
           } catch {
             case e: Exception =>
-              conn.prepareStatement("select * from " + tableName + " order by id fetch first 2 rows only").executeQuery()
+              conn.prepareStatement("select * from " + tableName + " order by id offset 0 rows fetch first 2 rows only").executeQuery()
           }
         }
         new ResultSetTraversable(rs).foldLeft[List[Int]](Nil) { case (r, rs) => rs.int("id") :: r } should not be null

@@ -41,7 +41,7 @@ class GlobalSettingsSpec extends FlatSpec with Matchers with Settings with LogSu
         try {
           SQL("drop table issue22").execute.apply()
         } catch { case e: Exception => }
-        SQL("create table issue22 (id int primary key, created_at timestamp)").execute.apply()
+        SQL("create table issue22 (id int primary key, created_at datetime)").execute.apply()
         GlobalSettings.loggingSQLAndTime = new LoggingSQLAndTimeSettings(
           enabled = true,
           warningEnabled = true,
@@ -73,7 +73,7 @@ class GlobalSettingsSpec extends FlatSpec with Matchers with Settings with LogSu
         try {
           SQL("drop table issue118").execute.apply()
         } catch { case e: Exception => }
-        SQL("create table issue118 (id int primary key, created_at timestamp)").execute.apply()
+        SQL("create table issue118 (id int primary key, created_at datetime)").execute.apply()
         SQL("insert into issue118 values (?,?)").bind(1, DateTime.now).update.apply()
       } finally {
         GlobalSettings.loggingSQLAndTime = new LoggingSQLAndTimeSettings()
@@ -106,7 +106,7 @@ class GlobalSettingsSpec extends FlatSpec with Matchers with Settings with LogSu
         try {
           SQL("drop table query_completion_listener").execute.apply()
         } catch { case e: Exception => }
-        SQL("create table query_completion_listener (id int primary key, created_at timestamp)").execute.apply()
+        SQL("create table query_completion_listener (id int primary key, created_at datetime)").execute.apply()
         SQL("insert into query_completion_listener values (?,?)").bind(1, DateTime.now).update.apply()
 
         var result: String = ""
@@ -151,7 +151,7 @@ class GlobalSettingsSpec extends FlatSpec with Matchers with Settings with LogSu
 
         result = -1
         GlobalSettings.taggedQueryCompletionListener.synchronized {
-          SQL("create table tagged_query_completion_listener (id int primary key, created_at timestamp)")
+          SQL("create table tagged_query_completion_listener (id int primary key, created_at datetime)")
             .tags("1", "2", "3", "4").execute.apply()
           result should equal(4)
         }

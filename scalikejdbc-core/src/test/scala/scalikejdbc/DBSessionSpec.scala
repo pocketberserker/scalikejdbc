@@ -324,7 +324,7 @@ class DBSessionSpec extends FlatSpec with Matchers with BeforeAndAfter with Sett
     DB autoCommit {
       implicit session =>
         try {
-          SQL("create table dbsessionspec_judate (id integer primary key, date timestamp)").execute.apply()
+          SQL("create table dbsessionspec_judate (id integer primary key, date datetime)").execute.apply()
           SQL("insert into dbsessionspec_judate values (?, ?)").bind(1, new java.util.Date()).update.apply()
         } finally {
           SQL("drop table dbsessionspec_judate").execute.apply()
@@ -344,7 +344,7 @@ class DBSessionSpec extends FlatSpec with Matchers with BeforeAndAfter with Sett
                 SQL("create table dbsessionspec_genkey (name varchar(30), id integer auto_increment, primary key(id))").execute.apply()
               } catch {
                 case e: Exception =>
-                  SQL("create table dbsessionspec_genkey (name varchar(30), id serial not null, primary key(id))").execute.apply()
+                  SQL("create table dbsessionspec_genkey (name varchar(30), id int not null identity (1, 1), primary key(id))").execute.apply()
               }
           }
           var id = -1L
@@ -352,7 +352,7 @@ class DBSessionSpec extends FlatSpec with Matchers with BeforeAndAfter with Sett
           val after = (stmt: PreparedStatement) => {
             val rs = stmt.getGeneratedKeys
             while (rs.next()) {
-              id = if (driverClassName == "org.h2.Driver" || driverClassName == "com.mysql.jdbc.Driver") rs.getLong(1) else rs.getLong("id")
+              id = if (driverClassName == "org.h2.Driver" || driverClassName == "com.mysql.jdbc.Driver" || driverClassName == "com.microsoft.sqlserver.jdbc.SQLServerDriver") rs.getLong(1) else rs.getLong("id")
             }
           }
           session.updateWithFilters(true, before, after, "insert into dbsessionspec_genkey (name) values (?)", "xxx")
@@ -377,7 +377,7 @@ class DBSessionSpec extends FlatSpec with Matchers with BeforeAndAfter with Sett
                 SQL("create table dbsessionspec_update_genkey (id integer auto_increment, name varchar(30), primary key(id))").execute.apply()
               } catch {
                 case e: Exception =>
-                  SQL("create table dbsessionspec_update_genkey (id serial not null, name varchar(30), primary key(id))").execute.apply()
+                  SQL("create table dbsessionspec_update_genkey (id int not null identity (1, 1), name varchar(30), primary key(id))").execute.apply()
               }
           }
 
@@ -407,7 +407,7 @@ class DBSessionSpec extends FlatSpec with Matchers with BeforeAndAfter with Sett
                 SQL("create table dbsessionspec_update_genkey2 (name varchar(30), id integer auto_increment, primary key(id))").execute.apply()
               } catch {
                 case e: Exception =>
-                  SQL("create table dbsessionspec_update_genkey2 (name varchar(30), id serial not null, primary key(id))").execute.apply()
+                  SQL("create table dbsessionspec_update_genkey2 (name varchar(30), id int not null identity (1, 1), primary key(id))").execute.apply()
               }
           }
 
@@ -447,7 +447,7 @@ class DBSessionSpec extends FlatSpec with Matchers with BeforeAndAfter with Sett
               id integer generated always as identity,
               date_value date not null,
               time_value time not null,
-              timestamp_value timestamp not null
+              timestamp_value datetime not null
             )
                    """).execute.apply()
             } catch {
@@ -458,7 +458,7 @@ class DBSessionSpec extends FlatSpec with Matchers with BeforeAndAfter with Sett
               id integer auto_increment,
               date_value date not null,
               time_value time not null,
-              timestamp_value timestamp not null,
+              timestamp_value datetime not null,
               primary key(id)
             )
                        """).execute.apply()
@@ -466,10 +466,10 @@ class DBSessionSpec extends FlatSpec with Matchers with BeforeAndAfter with Sett
                   case e: Exception =>
                     SQL("""
             create table dbsessionspec_dateTimeValues (
-              id serial not null,
+              id int not null identity (1, 1),
               date_value date not null,
               time_value time not null,
-              timestamp_value timestamp not null,
+              timestamp_value datetime not null,
               primary key(id)
             )
                          """).execute.apply()
@@ -587,7 +587,7 @@ class DBSessionSpec extends FlatSpec with Matchers with BeforeAndAfter with Sett
                 SQL("create table dbsession_work_with_short_values (id bigint auto_increment, s smallint, primary key(id))").execute.apply()
               } catch {
                 case e: Exception =>
-                  SQL("create table dbsession_work_with_short_values (id serial not null, s smallint, primary key(id))").execute.apply()
+                  SQL("create table dbsession_work_with_short_values (id int not null identity (1, 1), s smallint, primary key(id))").execute.apply()
               }
           }
           val s: Short = 123
@@ -614,7 +614,7 @@ class DBSessionSpec extends FlatSpec with Matchers with BeforeAndAfter with Sett
                 SQL("create table dbsession_work_with_scala_big_decimal_values (id bigint auto_increment, s bigint, primary key(id))").execute.apply()
               } catch {
                 case e: Exception =>
-                  SQL("create table dbsession_work_with_scala_big_decimal_values (id serial not null, s bigint, primary key(id))").execute.apply()
+                  SQL("create table dbsession_work_with_scala_big_decimal_values (id int not null identity (1, 1), s bigint, primary key(id))").execute.apply()
               }
           }
           val s: BigDecimal = BigDecimal(123)
@@ -641,7 +641,7 @@ class DBSessionSpec extends FlatSpec with Matchers with BeforeAndAfter with Sett
                 SQL("create table dbsession_work_with_java_big_decimal_values (id bigint auto_increment, s bigint, primary key(id))").execute.apply()
               } catch {
                 case e: Exception =>
-                  SQL("create table dbsession_work_with_java_big_decimal_values (id serial not null, s bigint, primary key(id))").execute.apply()
+                  SQL("create table dbsession_work_with_java_big_decimal_values (id int not null identity (1, 1), s bigint, primary key(id))").execute.apply()
               }
           }
           val s: BigDecimal = BigDecimal(123)
@@ -663,15 +663,15 @@ class DBSessionSpec extends FlatSpec with Matchers with BeforeAndAfter with Sett
           try {
             SQL("""
           create table dbsession_work_with_optional_values (
-            id bigint generated always as identity, 
-            v_boolean boolean, 
-            v_byte int, 
-            v_double double, 
-            v_float real, 
-            v_int int, 
-            v_long bigint, 
+            id bigint generated always as identity,
+            v_boolean bit,
+            v_byte int,
+            v_double double,
+            v_float real,
+            v_int int,
+            v_long bigint,
             v_short smallint,
-            v_timestamp timestamp
+            v_timestamp datetime
           )
                  """).execute.apply()
           } catch {
@@ -680,12 +680,12 @@ class DBSessionSpec extends FlatSpec with Matchers with BeforeAndAfter with Sett
                 SQL("""
           create table dbsession_work_with_optional_values (
             id bigint auto_increment,
-            v_boolean boolean, 
-            v_byte int, 
-            v_double double, 
-            v_float real, 
-            v_int int, 
-            v_long bigint, 
+            v_boolean bit,
+            v_byte int,
+            v_double double,
+            v_float real,
+            v_int int,
+            v_long bigint,
             v_short smallint,
             v_timestamp datetime,
             primary key(id)
@@ -695,15 +695,15 @@ class DBSessionSpec extends FlatSpec with Matchers with BeforeAndAfter with Sett
                 case e: Exception =>
                   SQL("""
           create table dbsession_work_with_optional_values (
-            id serial not null,
-            v_boolean boolean, 
-            v_byte smallint, 
-            v_double double precision, 
-            v_float real, 
-            v_int int, 
-            v_long bigint, 
+            id int not null identity (1, 1),
+            v_boolean bit,
+            v_byte smallint,
+            v_double double precision,
+            v_float real,
+            v_int int,
+            v_long bigint,
             v_short smallint,
-            v_timestamp timestamp,
+            v_timestamp datetime,
             primary key(id)
           )
                        """).execute.apply()
@@ -712,8 +712,8 @@ class DBSessionSpec extends FlatSpec with Matchers with BeforeAndAfter with Sett
 
           }
           val id = SQL("""
-          insert into dbsession_work_with_optional_values 
-          (v_boolean, v_byte, v_double, v_float, v_int, v_long, v_short, v_timestamp) values 
+          insert into dbsession_work_with_optional_values
+          (v_boolean, v_byte, v_double, v_float, v_int, v_long, v_short, v_timestamp) values
           (?,?,?,?,?,?,?,?)
                         """).bind(
             None, None, None, None, None, None, None, None
@@ -839,7 +839,7 @@ class DBSessionSpec extends FlatSpec with Matchers with BeforeAndAfter with Sett
         } catch {
           case e: Exception =>
             // PostgreSQL doesn't have blob
-            SQL("create table image_data (name varchar(255), data bytea);").execute.apply()
+            SQL("create table image_data (name varchar(255), data image);").execute.apply()
         }
         using(this.getClass.getClassLoader.getResourceAsStream("google.png")) { stream =>
           try {
@@ -855,7 +855,8 @@ class DBSessionSpec extends FlatSpec with Matchers with BeforeAndAfter with Sett
               else fail("Failed to insert data because " + e.getMessage, e)
           }
         }
-        SQL("select * from image_data;").map(rs => rs.binaryStream("data")).single.apply().map { bs =>
+        SQL("select * from image_data;").map { rs =>
+          val bs = rs.binaryStream("data")
           using(new java.io.ByteArrayOutputStream) { bos =>
             var next: Int = bs.read()
             while (next > -1) {
@@ -865,7 +866,7 @@ class DBSessionSpec extends FlatSpec with Matchers with BeforeAndAfter with Sett
             bos.flush()
             bos.toByteArray().size should equal(7007)
           }
-        }
+        }.single.apply()
       } finally {
         try {
           SQL("drop table image_data;").execute.apply()
@@ -882,7 +883,7 @@ class DBSessionSpec extends FlatSpec with Matchers with BeforeAndAfter with Sett
         } catch {
           case e: Exception =>
             // PostgreSQL doesn't have blob
-            SQL("create table image_data2 (name varchar(255), data bytea);").execute.apply()
+            SQL("create table image_data2 (name varchar(255), data image);").execute.apply()
         }
         using(this.getClass.getClassLoader.getResourceAsStream("google.png")) { stream =>
           using(new java.io.ByteArrayOutputStream) { bos =>
@@ -899,7 +900,8 @@ class DBSessionSpec extends FlatSpec with Matchers with BeforeAndAfter with Sett
               .update.apply()
           }
         }
-        SQL("select * from image_data2").map(rs => rs.binaryStream("data")).single.apply().map { bs =>
+        SQL("select * from image_data2").map { rs =>
+          val bs = rs.binaryStream("data")
           using(new java.io.ByteArrayOutputStream) { bos =>
             var next: Int = bs.read()
             while (next > -1) {
@@ -909,7 +911,7 @@ class DBSessionSpec extends FlatSpec with Matchers with BeforeAndAfter with Sett
             bos.flush()
             bos.toByteArray().size should equal(7007)
           }
-        }
+        }.single.apply()
       } finally {
         try {
           SQL("drop table image_data2").execute.apply()
@@ -931,7 +933,7 @@ class DBSessionSpec extends FlatSpec with Matchers with BeforeAndAfter with Sett
                 SQL("create table dbsession_issue_218 (id bigint auto_increment, s bigint, primary key(id))").execute.apply()
               } catch {
                 case e: Exception =>
-                  SQL("create table dbsession_issue_218 (id serial not null, s bigint, primary key(id))").execute.apply()
+                  SQL("create table dbsession_issue_218 (id int not null identity (1, 1), s bigint, primary key(id))").execute.apply()
               }
           }
           val sql = SQL("insert into dbsession_issue_218 (s) values (?)").bind(123).update
@@ -961,7 +963,7 @@ class DBSessionSpec extends FlatSpec with Matchers with BeforeAndAfter with Sett
           } catch {
             case e: Exception =>
               // PostgreSQL doesn't have blob
-              SQL("create table dbsession_work_with_parameter_binder (id bigint, data bytea)").execute.apply()
+              SQL("create table dbsession_work_with_parameter_binder (id bigint, data image)").execute.apply()
           }
           val bytes = scala.Array[Byte](1, 2, 3, 4, 5, 6, 7)
           val in = new ByteArrayInputStream(bytes)

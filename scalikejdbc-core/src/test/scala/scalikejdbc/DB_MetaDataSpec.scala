@@ -9,166 +9,167 @@ class DB_MetaDataSpec extends FlatSpec with Matchers with Settings with LogSuppo
   behavior of "DB's metadata operations"
 
   it should "retrieve metadata" in {
+    if (driverClassName != "com.microsoft.sqlserver.jdbc.SQLServerDriver") {
+      try {
+        DB autoCommit { implicit s =>
+          execute("""
+            create table meta_groups (
+              id int generated always as identity,
+              name varchar(30) default 'NO NAME' not null,
+              primary key(id)
+            );
+            """, """
+            create table meta_groups (
+              id integer primary key,
+              name varchar(30) default 'NO NAME' not null
+            );
+            """)
 
-    try {
-      DB autoCommit { implicit s =>
-        execute("""
-          create table meta_groups (
-            id int generated always as identity,
-            name varchar(30) default 'NO NAME' not null,
-            primary key(id)
-          );
-          """, """
-          create table meta_groups (
-            id integer primary key,
-            name varchar(30) default 'NO NAME' not null
-          );
-          """)
+          execute("""
+            create table meta_members (
+              id int generated always as identity,
+              name varchar(30) default 'foooooooo baaaaaar' not null,
+              group_id int,
+              description varchar(1000),
+              birthday date,
+              created_at timestamp not null,
+              primary key(id)
+            );
+            """, """
+            create table meta_members (
+              id integer primary key,
+              name varchar(30) default 'foooooooo baaaaaar' not null,
+              group_id integer,
+              description varchar(1000),
+              birthday date,
+              created_at timestamp not null
+            );
+            """)
 
-        execute("""
-          create table meta_members (
-            id int generated always as identity,
-            name varchar(30) default 'foooooooo baaaaaar' not null,
-            group_id int,
-            description varchar(1000),
-            birthday date,
-            created_at timestamp not null,
-            primary key(id)
-          );
-          """, """
-          create table meta_members (
-            id integer primary key,
-            name varchar(30) default 'foooooooo baaaaaar' not null,
-            group_id integer,
-            description varchar(1000),
-            birthday date,
-            created_at timestamp not null
-          );
-          """)
+          execute(
+            "comment on table meta_members is 'website members';",
+            "alter table meta_members comment 'website members';")
+          execute(
+            "comment on column meta_members.name is 'Full name';",
+            "alter table meta_members change name name varchar(30) not null comment 'Full name';")
+          execute(
+            "comment on column meta_members.description is 'xxxxxxxxxxxxxxxxyyyyyyyyyyyyyyyzzzzzzzzzzz';",
+            "alter table meta_members change description description varchar(1000) comment 'xxxxxxxxxxxxxxxxyyyyyyyyyyyyyyyzzzzzzzzzzz';")
 
-        execute(
-          "comment on table meta_members is 'website members';",
-          "alter table meta_members comment 'website members';")
-        execute(
-          "comment on column meta_members.name is 'Full name';",
-          "alter table meta_members change name name varchar(30) not null comment 'Full name';")
-        execute(
-          "comment on column meta_members.description is 'xxxxxxxxxxxxxxxxyyyyyyyyyyyyyyyzzzzzzzzzzz';",
-          "alter table meta_members change description description varchar(1000) comment 'xxxxxxxxxxxxxxxxyyyyyyyyyyyyyyyzzzzzzzzzzz';")
+          execute("alter table meta_members add foreign key (group_id) references meta_groups(id);")
+          execute("create unique index meta_members_name_and_group on meta_members(name, group_id);")
+          execute("create index meta_members_birthday on meta_members(birthday);")
+        }
 
-        execute("alter table meta_members add foreign key (group_id) references meta_groups(id);")
-        execute("create unique index meta_members_name_and_group on meta_members(name, group_id);")
-        execute("create index meta_members_birthday on meta_members(birthday);")
-      }
-
-      // find table names
-      for (
-        (act, i) <- Seq(
-          DB.getTableNames("*"),
-          DB.getTableNames("%"),
-          DB.getTableNames("meta_%"),
-          DB.getTableNames("META_%"),
-          NamedDB('default).getTableNames("*"),
-          NamedDB('default).getTableNames("%"),
-          NamedDB('default).getTableNames("meta_%"),
-          NamedDB('default).getTableNames("META_%")
-        ).zipWithIndex
-      ) withClue(s"No. ${i}") {
-        lower(act) should contain allOf ("meta_groups", "meta_members")
-      }
-
-      for (
-        act <- Seq(
-          DB.getTableNames("%.%"),
-          NamedDB('default).getTableNames("%.%")
-        )
-      ) {
-        // mysql is not support schema
-        if (driverClassName == "com.mysql.jdbc.Driver") {
+        // find table names
+        for (
+          (act, i) <- Seq(
+            DB.getTableNames("*"),
+            DB.getTableNames("%"),
+            DB.getTableNames("meta_%"),
+            DB.getTableNames("META_%"),
+            NamedDB('default).getTableNames("*"),
+            NamedDB('default).getTableNames("%"),
+            NamedDB('default).getTableNames("meta_%"),
+            NamedDB('default).getTableNames("META_%")
+          ).zipWithIndex
+        ) withClue(s"No. ${i}") {
           lower(act) should contain allOf ("meta_groups", "meta_members")
-        } else {
-          lower(act) should contain allOf ("public.meta_groups", "public.meta_members")
         }
-      }
 
-      for (
-        (act, i) <- Seq(
-          DB.getTableNames("%ta_me%"),
-          DB.getTableNames("%TA_ME%"),
-          NamedDB('default).getTableNames("%ta_me%"),
-          NamedDB('default).getTableNames("%TA_ME%")
-        ).zipWithIndex
-      ) withClue(s"No. ${i}") {
-        lower(act) should (contain("meta_members") and not contain ("meta_groups"))
-      }
-
-      DB.showTables("dummy") should be(empty)
-      NamedDB('default).showTables("dummy") should be(empty)
-
-      // showTables returns string value
-      lower(DB.showTables("%")) should (include("meta_groups") and include("meta_members"))
-      lower(NamedDB('default).showTables("%")) should (include("meta_groups") and include("meta_members"))
-
-      DB.showTables("dummy") should be("")
-      NamedDB('default).showTables("dummy") should be("")
-
-      // describe table
-      for (
-        act <- Seq(
-          DB.getTable("META_MEMBERS"),
-          DB.getTable("meta_members"),
-          NamedDB('default).getTable("META_MEMBERS"),
-          NamedDB('default).getTable("meta_members")
-        )
-      ) {
-        if (driverClassName == "com.mysql.jdbc.Driver") {
-          lower(act.value.schema) should equal(null)
-        } else {
-          lower(act.value.schema) should equal("public")
+        for (
+          act <- Seq(
+            DB.getTableNames("%.%"),
+            NamedDB('default).getTableNames("%.%")
+          )
+        ) {
+          // mysql is not support schema
+          if (driverClassName == "com.mysql.jdbc.Driver") {
+            lower(act) should contain allOf ("meta_groups", "meta_members")
+          } else {
+            lower(act) should contain allOf ("public.meta_groups", "public.meta_members")
+          }
         }
-        lower(act.value.name) should equal("meta_members")
 
-        act.value.columns should have size (6)
-        act.value.foreignKeys should have size (1)
-
-        if (url.startsWith("jdbc:postgresql")) {
-          act.value.indices should have size (3)
-        } else {
-          act.value.indices should have size (4) // contain foreign key
+        for (
+          (act, i) <- Seq(
+            DB.getTableNames("%ta_me%"),
+            DB.getTableNames("%TA_ME%"),
+            NamedDB('default).getTableNames("%ta_me%"),
+            NamedDB('default).getTableNames("%TA_ME%")
+          ).zipWithIndex
+        ) withClue(s"No. ${i}") {
+          lower(act) should (contain("meta_members") and not contain ("meta_groups"))
         }
-      }
 
-      DB.getTable("dummy").isDefined should be(false)
-      NamedDB('default).getTable("dummy").isDefined should be(false)
+        DB.showTables("dummy") should be(empty)
+        NamedDB('default).showTables("dummy") should be(empty)
 
-      // describe returns string value
-      lower(DB.describe("meta_members")) should include("meta_members")
-      lower(NamedDB('default).describe("meta_members")) should include("meta_members")
+        // showTables returns string value
+        lower(DB.showTables("%")) should (include("meta_groups") and include("meta_members"))
+        lower(NamedDB('default).showTables("%")) should (include("meta_groups") and include("meta_members"))
 
-      DB.describe("dummy") should be("Not found.")
-      NamedDB('default).describe("dummy") should be("Not found.")
+        DB.showTables("dummy") should be("")
+        NamedDB('default).showTables("dummy") should be("")
 
-      // get column names
-      val exp = List("id", "name", "group_id", "description", "birthday", "created_at")
-      for (
-        table <- List("meta_members", "Meta_Members", "META_MEMBERS")
-      ) withClue(s"table [${table}]") {
-        lower(DB.getColumnNames(table)) should equal(exp)
-      }
+        // describe table
+        for (
+          act <- Seq(
+            DB.getTable("META_MEMBERS"),
+            DB.getTable("meta_members"),
+            NamedDB('default).getTable("META_MEMBERS"),
+            NamedDB('default).getTable("meta_members")
+          )
+        ) {
+          if (driverClassName == "com.mysql.jdbc.Driver") {
+            lower(act.value.schema) should equal(null)
+          } else {
+            lower(act.value.schema) should equal("public")
+          }
+          lower(act.value.name) should equal("meta_members")
 
-      DB.getColumnNames("dummy") should be(empty)
+          act.value.columns should have size (6)
+          act.value.foreignKeys should have size (1)
 
-    } finally {
-      DB autoCommit { implicit s =>
-        execute("drop table meta_members")
-        execute("drop table meta_groups")
+          if (url.startsWith("jdbc:postgresql")) {
+            act.value.indices should have size (3)
+          } else {
+            act.value.indices should have size (4) // contain foreign key
+          }
+        }
+
+        DB.getTable("dummy").isDefined should be(false)
+        NamedDB('default).getTable("dummy").isDefined should be(false)
+
+        // describe returns string value
+        lower(DB.describe("meta_members")) should include("meta_members")
+        lower(NamedDB('default).describe("meta_members")) should include("meta_members")
+
+        DB.describe("dummy") should be("Not found.")
+        NamedDB('default).describe("dummy") should be("Not found.")
+
+        // get column names
+        val exp = List("id", "name", "group_id", "description", "birthday", "created_at")
+        for (
+          table <- List("meta_members", "Meta_Members", "META_MEMBERS")
+        ) withClue(s"table [${table}]") {
+          lower(DB.getColumnNames(table)) should equal(exp)
+        }
+
+        DB.getColumnNames("dummy") should be(empty)
+
+      } finally {
+        DB autoCommit { implicit s =>
+          execute("drop table meta_members")
+          execute("drop table meta_groups")
+        }
       }
     }
   }
 
   it should "retrieve metadata with schemas" in {
     // mysql is not support schema
-    if (driverClassName != "com.mysql.jdbc.Driver") {
+    if (driverClassName != "com.mysql.jdbc.Driver" && driverClassName != "com.microsoft.sqlserver.jdbc.SQLServerDriver") {
 
       try {
 

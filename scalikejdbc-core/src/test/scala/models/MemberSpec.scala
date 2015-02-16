@@ -24,7 +24,7 @@ class MemberSpec extends FlatSpec with Matchers with Settings {
               name varchar(30) not null,
               description varchar(1000),
               birthday date,
-              created_at timestamp not null
+              created_at datetime not null
             )
             """).execute.apply()
       } catch {
@@ -90,7 +90,7 @@ class MemberSpec extends FlatSpec with Matchers with Settings {
               name varchar(30) not null,
               description varchar(1000),
               birthday date,
-              created_at timestamp not null
+              created_at datetime not null
             )
           """).execute.apply()
     }

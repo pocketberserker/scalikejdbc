@@ -19,7 +19,7 @@ class StringSQLRunnerSpec extends FlatSpec with Matchers with Settings {
       import scalikejdbc.StringSQLRunner._
 
       // run insert SQL
-      ("insert into " + tableName + " values (3, 'Ben')").run
+      ("insert into " + tableName + " values (3, 'Ben')").execute
       ("insert into " + tableName + " values (4, 'Chris')").execute
 
       // run select SQL

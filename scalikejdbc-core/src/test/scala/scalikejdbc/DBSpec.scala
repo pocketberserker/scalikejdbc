@@ -249,7 +249,7 @@ class DBSpec extends FlatSpec with Matchers with BeforeAndAfter with Settings wi
   // --------------------
   // futureLocalTx
 
-  implicit val patienceTimeout = PatienceConfig(10.seconds)
+  implicit val patienceTimeout = PatienceConfig(90.seconds)
 
   it should "execute single in futureLocalTx block" in {
     val tableName = tableNamePrefix + "_singleInFutureLocalTx"

@@ -85,7 +85,7 @@ class BasicUsageSpec extends FlatSpec with Matchers with LoanPattern {
     // get a connection and create DB instance
     DB autoCommit { session =>
       ignoring(classOf[Throwable]) { session.execute("drop table " + tableName) }
-      session.execute("create table " + tableName + " (id integer primary key, name varchar(30),created_at timestamp not null)")
+      session.execute("create table " + tableName + " (id integer primary key, name varchar(30),created_at datetime not null)")
     }
 
     // connect and begin a block (ConnectionPool required)
@@ -220,7 +220,7 @@ class BasicUsageSpec extends FlatSpec with Matchers with LoanPattern {
             sql // ok, this database supports limit keyword
           } catch {
             case e: Exception =>
-              val sql = SQL("select * from emp order by id fetch first 10 rows only").map(empMapper)
+              val sql = SQL("select * from emp order by id offset 0 rows fetch first 10 rows only").map(empMapper)
               sql.list.apply()
               sql
           }
@@ -240,7 +240,7 @@ class BasicUsageSpec extends FlatSpec with Matchers with LoanPattern {
         val firstEmp: Option[Emp] = getFirstOf10Emp.apply()
         firstEmp.isDefined should be(true)
 
-        // expects single result or nothing, when mutiple results are returned, Exception will be thrown. 
+        // expects single result or nothing, when mutiple results are returned, Exception will be thrown.
         val single: Option[Emp] = SQL("select * from emp where id = ?").bind(1).map(empMapper).single.apply() // or #toOption
         single.isDefined should be(true)
 
@@ -254,7 +254,7 @@ class BasicUsageSpec extends FlatSpec with Matchers with LoanPattern {
               id integer primary key,
               name varchar(30) not null,
               description varchar(1000),
-              created_at timestamp
+              created_at datetime
             );""").execute.apply()
         } catch { case e: Exception => }
         SQL("truncate table company").execute.apply()
